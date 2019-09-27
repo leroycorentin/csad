@@ -1,0 +1,11 @@
+CNN
+------------------------------------
+nombre de couches
+taille des convolutions...
+fonction d'activation adaptée à la classification (softmax ?)
+
+KNN
+------------------------------------
+métrique distance
+courbe avec nb de voisins
+autres paramètres ?
