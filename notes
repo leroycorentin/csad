@@ -3,6 +3,7 @@ CNN
 nombre de couches
 taille des convolutions...
 fonction d'activation adaptée à la classification (softmax ?)
+entraînement plus poussé (rotation des images, flou, ajout de bruit...)
 
 KNN
 ------------------------------------
