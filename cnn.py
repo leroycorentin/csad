@@ -95,12 +95,15 @@ class CNNModel(nn.Module):
         self.fc2 = nn.Linear(500, 10)
 
     def forward(self, x):
-        x = F.relu(self.conv1(x))
+        x = self.conv1(x)
+        x = F.relu(x)
         x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
+        x = self.conv2(x)
+        x = F.relu(x)
         x = F.max_pool2d(x, 2, 2)
         x = x.view(-1, 4*4*50)
-        x = F.relu(self.fc1(x))
+        x = self.fc1(x)
+        x = F.relu(x)
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
@@ -120,15 +123,10 @@ error = nn.CrossEntropyLoss()
 learning_rate = 0.1
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
-# CNN model training
-count = 0
-loss_list = []
-iteration_list = []
-accuracy_list = []
+# Training
 for epoch in range(num_epochs):
     for i, (images, labels) in enumerate(train_loader):
-
-        train = Variable(images.view(100,1,28,28))
+        train = Variable(images.view(-1,1,28,28))
         labels = Variable(labels)
 
         # Clear gradients
@@ -145,33 +143,24 @@ for epoch in range(num_epochs):
 
         # Update parameters
         optimizer.step()
-        count += 1
-        if count % 50 == 0:
-            # Calculate Accuracy
-            correct = 0
-            total = 0
-            # Iterate through test dataset
-            for images, labels in test_loader:
 
-                test = Variable(images.view(100,1,28,28))
+# Testing
+correct = 0
+total = 0
+with torch.no_grad():
+    for images, labels in test_loader:
+        test = Variable(images.view(-1,1,28,28))
 
-                # Forward propagation
-                outputs = model(test)
+        # Forward propagation
+        outputs = model(test)
 
-                # Get predictions from the maximum value
-                predicted = torch.max(outputs.data, 1)[1]
+        # Get predictions from the maximum value
+        predicted = torch.max(outputs.data, 1)[1]
 
-                # Total number of labels
-                total += len(labels)
+        # Total number of labels
+        total += len(labels)
 
-                correct += (predicted == labels).sum()
+        correct += (predicted == labels).sum().item()
 
-            accuracy = 100 * correct / float(total)
-
-            # store loss and iteration
-            loss_list.append(loss.data)
-            iteration_list.append(count)
-            accuracy_list.append(accuracy)
-            if count % 500 == 0:
-                # Print Loss
-                print('Iteration: {}  Loss: {}  Accuracy: {} %'.format(count, loss.item(), accuracy))
+accuracy = correct / float(total)
+print("Overall accuracy: {}".format(accuracy))
