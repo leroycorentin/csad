@@ -124,43 +124,54 @@ learning_rate = 0.1
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
 # Training
-for epoch in range(num_epochs):
-    for i, (images, labels) in enumerate(train_loader):
-        train = Variable(images.view(-1,1,28,28))
-        labels = Variable(labels)
+def train():
+    for epoch in range(num_epochs):
+        for i, (images, labels) in enumerate(train_loader):
+            train = Variable(images.view(-1,1,28,28))
+            labels = Variable(labels)
 
-        # Clear gradients
-        optimizer.zero_grad()
+            # Clear gradients
+            optimizer.zero_grad()
 
-        # Forward propagation
-        outputs = model(train)
+            # Forward propagation
+            outputs = model(train)
 
-        # Calculate softmax and ross entropy loss
-        loss = error(outputs, labels)
+            # Calculate softmax and ross entropy loss
+            loss = error(outputs, labels)
 
-        # Calculating gradients
-        loss.backward()
+            # Calculating gradients
+            loss.backward()
 
-        # Update parameters
-        optimizer.step()
+            # Update parameters
+            optimizer.step()
 
-# Testing
-correct = 0
-total = 0
-with torch.no_grad():
-    for images, labels in test_loader:
-        test = Variable(images.view(-1,1,28,28))
+def test():
+    # Testing
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for images, labels in test_loader:
+            test = Variable(images.view(-1,1,28,28))
 
-        # Forward propagation
-        outputs = model(test)
+            # Forward propagation
+            outputs = model(test)
 
-        # Get predictions from the maximum value
-        predicted = torch.max(outputs.data, 1)[1]
+            # Get predictions from the maximum value
+            predicted = torch.max(outputs.data, 1)[1]
 
-        # Total number of labels
-        total += len(labels)
+            # Total number of labels
+            total += len(labels)
 
-        correct += (predicted == labels).sum().item()
+            correct += (predicted == labels).sum().item()
 
-accuracy = correct / float(total)
-print("Overall accuracy: {}".format(accuracy))
+    accuracy = correct / float(total)
+    print("Overall accuracy: {}".format(accuracy))
+
+def weights_init(m):
+    if isinstance(m, nn.Conv2d):
+        torch.nn.init.xavier_uniform_(m.weight.data)
+
+# Main
+model.apply(weights_init)
+train()
+test()
