@@ -107,12 +107,6 @@ class CNNModel(nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
-# batch_size, epoch and iteration
-batch_size = 100
-n_iters = 2500
-num_epochs = n_iters / (len(features_train) / batch_size)
-num_epochs = int(num_epochs)
-
 # Create ANN
 model = CNNModel()
 
@@ -124,17 +118,17 @@ learning_rate = 0.1
 optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
 # Training
-def train():
+def train_model():
     for epoch in range(num_epochs):
         for i, (images, labels) in enumerate(train_loader):
-            train = Variable(images.view(-1,1,28,28))
+            train_images = Variable(images.view(-1,1,28,28))
             labels = Variable(labels)
 
             # Clear gradients
             optimizer.zero_grad()
 
             # Forward propagation
-            outputs = model(train)
+            outputs = model(train_images)
 
             # Calculate softmax and ross entropy loss
             loss = error(outputs, labels)
@@ -145,16 +139,16 @@ def train():
             # Update parameters
             optimizer.step()
 
-def test():
+def test_model():
     # Testing
     correct = 0
     total = 0
     with torch.no_grad():
         for images, labels in test_loader:
-            test = Variable(images.view(-1,1,28,28))
+            test_images = Variable(images.view(-1,1,28,28))
 
             # Forward propagation
-            outputs = model(test)
+            outputs = model(test_images)
 
             # Get predictions from the maximum value
             predicted = torch.max(outputs.data, 1)[1]
@@ -165,13 +159,20 @@ def test():
             correct += (predicted == labels).sum().item()
 
     accuracy = correct / float(total)
-    print("Overall accuracy: {}".format(accuracy))
+
+    return accuracy
 
 def weights_init(m):
+    torch.manual_seed(2147483647)
     if isinstance(m, nn.Conv2d):
         torch.nn.init.xavier_uniform_(m.weight.data)
 
 # Main
-model.apply(weights_init)
-train()
-test()
+learning_rates = np.arange(0.01, 1.05, 0.01)
+for lr in learning_rates:
+    model = CNNModel()
+    model.apply(weights_init)
+    optimizer = torch.optim.SGD(model.parameters(), lr=lr)
+    train_model()
+    accuracy = test_model()
+    print("Learning rate: {}, accuracy: {}".format(lr, accuracy))
